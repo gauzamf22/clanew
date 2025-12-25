@@ -723,25 +723,29 @@
   }
 
 
-  function register() {
+  
+// ================================
+// REGISTER
+// ================================
+function register() {
   const name = document.getElementById('registerName').value.trim();
   const username = document.getElementById('registerUsername').value.trim();
   const password = document.getElementById('registerPassword').value;
   const confirmPassword = document.getElementById('registerConfirmPassword').value;
 
-  if (!name || !username || !password) {
+  if (!name || !username || !password || !confirmPassword) {
     alert('Mohon lengkapi semua field!');
     return;
   }
 
-  // validasi username harus gmail
+  // Validasi Gmail
   const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
   if (!gmailRegex.test(username)) {
     alert('Username harus menggunakan akun Gmail (@gmail.com)!');
     return;
   }
 
-  // validasi password minimal 6 karakter
+  // Validasi password
   if (password.length < 6) {
     alert('Password minimal 6 karakter!');
     return;
@@ -757,59 +761,88 @@
     return;
   }
 
+  // Simpan ke database
   users[username] = {
-    name,
-    password,
+    name: name,
+    password: password,
     createdAt: new Date().toISOString(),
-    data: { notes: [], studySessions: [], expenses: [], tasks: [], reminders: [] }
+    data: {
+      notes: [],
+      studySessions: [],
+      expenses: [],
+      tasks: [],
+      reminders: []
+    }
   };
+
   saveUsersToStorage();
 
   alert('Registrasi berhasil! Silakan login.');
+
   document.getElementById('registerName').value = '';
   document.getElementById('registerUsername').value = '';
   document.getElementById('registerPassword').value = '';
   document.getElementById('registerConfirmPassword').value = '';
+
   showLogin();
 }
 
-  function login() {
-    const username = document.getElementById('loginUsername').value.trim();
-    const password = document.getElementById('loginPassword').value;
+// ================================
+// LOGIN
+// ================================
+function login() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
 
-    if (!username || !password) {
-      alert('Mohon masukkan username dan password!');
-      return;
-    }
-    if (!users[username]) {
-      alert('Username tidak ditemukan!');
-      return;
-    }
-    if (users[username].password !== password) {
-      alert('Password salah!');
-      return;
-    }
+  if (!username || !password) {
+    alert('Mohon masukkan username dan password!');
+    return;
+  }
 
-    currentUser = username;
-    localStorage.setItem('currentUser', currentUser);
-    loadFromUserData();
+  if (!users[username]) {
+    alert('Username tidak ditemukan!');
+    return;
+  }
+
+  if (users[username].password !== password) {
+    alert('Password salah!');
+    return;
+  }
+
+  currentUser = username;
+  localStorage.setItem('currentUser', currentUser);
+
+  document.getElementById('loginUsername').value = '';
+  document.getElementById('loginPassword').value = '';
+
+  showApp();
+}
+
+// ================================
+// LOGOUT
+// ================================
+function logout() {
+  if (!currentUser) return;
+
+  if (confirm('Yakin ingin logout?')) {
+    currentUser = null;
+    localStorage.removeItem('currentUser');
+    showAuthScreen();
+  }
+}
+
+// ================================
+// AUTO LOGIN SAAT REFRESH
+// ================================
+window.addEventListener('load', () => {
+  if (currentUser && users[currentUser]) {
     showApp();
-    rescheduleAllReminders();
-
-    document.getElementById('loginUsername').value = '';
-    document.getElementById('loginPassword').value = '';
+  } else {
+    showAuthScreen();
   }
+});
 
-  function logout() {
-    if (!currentUser) return showAuthScreen();
-    if (confirm('Yakin ingin logout?')) {
-      saveAllAndClearTimeouts();
-      syncToUserData();
-      currentUser = null;
-      localStorage.removeItem('currentUser');
-      showAuthScreen();
-    }
-  }
+  
 
   function saveAllAndClearTimeouts() {
     if (currentUser) syncToUserData();
@@ -1592,3 +1625,4 @@
     </script>
 </body>
 </html>
+
